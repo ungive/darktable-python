@@ -1,0 +1,6 @@
+exif==1.6.0
+pillow==10.4.0
+plum-py==0.8.7
+python-dateutil==2.9.0.post0
+simple_cache==0.35
+six==1.16.0
