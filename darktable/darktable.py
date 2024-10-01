@@ -207,7 +207,7 @@ class Exporter:
         xmp_path = photo.xmp_path
 
         if len(self.xmp_changes) > 0:
-            with open(self.tmp_xmp_name, 'w') as tmp_xmp_file:
+            with open(self.tmp_xmp_name, 'wb') as tmp_xmp_file:
                 modify_xmp(xmp_path, tmp_xmp_file, changes=self.xmp_changes)
             xmp_path = self.tmp_xmp_name
 
@@ -473,7 +473,7 @@ def modify_xmp(in_filename, out_fd: TextIOWrapper, changes: list[Callable[[Eleme
     xmp_data = ElementTree.tostring(root, encoding='unicode')
     out_fd.seek(0)
     out_fd.truncate()
-    out_fd.write(str(xmp_data))
+    out_fd.write(xmp_data.encode())
     out_fd.flush()
 
 
