@@ -5,7 +5,7 @@ import tempfile
 import datetime
 import sqlite3
 import dateutil.parser
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from collections import defaultdict
 from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
@@ -211,7 +211,7 @@ class Exporter:
                 modify_xmp(xmp_path, tmp_xmp_file, changes=self.xmp_changes)
             xmp_path = self.tmp_xmp_name
 
-        out_path = path.join(out_dir, self.filename_format)
+        out_path = str(PurePosixPath(out_dir, self.filename_format))
         # https://docs.darktable.org/usermanual/4.0/en/special-topics/program-invocation/darktable-cli
         # https://docs.darktable.org/usermanual/4.0/en/special-topics/program-invocation/darktable
         command = [
