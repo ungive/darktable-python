@@ -346,15 +346,17 @@ class Exporter:
         self._sess_exported.clear()
 
 
-def parse_darktable_datetime(datetime_taken):
+def parse_darktable_datetime(datetime_taken: int):
     # the timestamp is in microseconds
     # additionally, it uses an origin different than epoch time
     # https://github.com/darktable-org/darktable/blob/0f5bd178/src/common/datetime.c#L22C29-L22C52
     origin = dateutil.parser.isoparse('0001-01-01 00:00:00.000Z')
     epoch = dateutil.parser.isoparse('1970-01-01 00:00:00.000Z')
     epoch_delta = epoch - origin
-    value_secs = datetime_taken/1000/1000 - epoch_delta.total_seconds()
-    return datetime.datetime.fromtimestamp(value_secs, datetime.timezone.utc)
+    value = datetime_taken/1000/1000
+    value = max(value, epoch_delta.total_seconds())
+    value_corrected = value - epoch_delta.total_seconds()
+    return datetime.datetime.fromtimestamp(value_corrected, datetime.timezone.utc)
 
 
 class AttachedDatabase:
@@ -404,7 +406,10 @@ class DarktableLibrary:
             id=int(row['id']),
             filepath=row['filepath'],
             version=int(row['version']),
-            datetime_taken=parse_darktable_datetime(row['datetime_taken']),
+            datetime_taken=parse_darktable_datetime(
+                row['datetime_taken']
+                if isinstance(row['datetime_taken'], int)
+                else 0),
             tags={
                 Tag(int(tag_id), tag_name): int(tag_position)
                 for tag_id, tag_name, tag_position in zip(
