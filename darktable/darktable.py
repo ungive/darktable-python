@@ -149,7 +149,8 @@ class Exporter:
         self.exif_copyright = exif_copyright
         self.debug = debug
         self.xmp_changes = xmp_changes
-        _, self.tmp_xmp_name = tempfile.mkstemp(suffix='.xmp')
+        fd, self.tmp_xmp_name = tempfile.mkstemp(suffix='.xmp')
+        os.close(fd)
 
         self.args_hash = args_hash(
             cli_bin=str(cli_bin),
