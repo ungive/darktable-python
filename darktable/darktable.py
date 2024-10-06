@@ -492,16 +492,16 @@ def sanitize_xmp(in_filename, out_fd: TextIOWrapper):
     ])
 
 
-def is_raw_photo_ext(ext):
+def is_raw_photo_ext(ext: str) -> bool:
     # all raw image file extensions
     # (excluding darktable export extensions, namely tif)
     # https://en.wikipedia.org/wiki/Raw_image_format
     # https://docs.darktable.org/usermanual/4.0/en/special-topics/program-invocation/darktable-cli/
-    return ext.lower() in set([
-        '.3fr', '.ari', '.arw', '.bay', '.braw', '.crw', '.cr2', '.cr3',
-        '.cap', '.data', '.dcs', '.dcr', '.dng', '.drf', '.eip', '.erf',
-        '.fff', '.gpr', '.iiq', '.k25', '.kdc', '.mdc', '.mef', '.mos',
-        '.mrw', '.nef', '.nrw', '.obm', '.orf', '.pef', '.ptx', '.pxn',
-        '.r3d', '.raf', '.raw', '.rwl', '.rw2', '.rwz', '.sr2', '.srf',
-        '.srw', '.tif', '.x3f'
-    ]) - set(['.tif'])
+    return ext.strip().lstrip('.').lower() in set([
+        '3fr', 'ari', 'arw', 'bay', 'braw', 'crw', 'cr2', 'cr3',
+        'cap', 'data', 'dcs', 'dcr', 'dng', 'drf', 'eip', 'erf',
+        'fff', 'gpr', 'iiq', 'k25', 'kdc', 'mdc', 'mef', 'mos',
+        'mrw', 'nef', 'nrw', 'obm', 'orf', 'pef', 'ptx', 'pxn',
+        'r3d', 'raf', 'raw', 'rwl', 'rw2', 'rwz', 'sr2', 'srf',
+        'srw', 'tif', 'x3f'
+    ]) - set(['tif'])
