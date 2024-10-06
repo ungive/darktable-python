@@ -6,6 +6,7 @@ import datetime
 import sqlite3
 import string
 import dateutil.parser
+from enum import Enum
 from pathlib import Path, PurePosixPath
 from collections import defaultdict
 from xml.etree import ElementTree
@@ -56,9 +57,19 @@ class Tag(HasId):
         return f'{self.__class__.__name__}({self.id}, {self.name})'
 
 
+# https://github.com/darktable-org/darktable/blob/7b86507f/src/common/colorlabels.h#L29
+class ColorLabel(Enum):
+    RED = 0
+    YELLOW = 1
+    GREEN = 2
+    BLUE = 3
+    PURPLE = 4
+
+
 class Photo(HasId):
     def __init__(self, id, filepath, version, datetime_taken: datetime.datetime,
-                 tags: dict[Tag, Position], film_roll: FilmRoll, position: Position, rating: int):
+                 tags: dict[Tag, Position], film_roll: FilmRoll, position: Position,
+                 rating: int, color_labels: set[ColorLabel]):
         self.id: int = id
         self.filepath: str = os.path.normpath(filepath)
         self.version: int = version
@@ -67,6 +78,7 @@ class Photo(HasId):
         self.film_roll: FilmRoll = film_roll
         self.position: Position = position
         self.rating: int = rating
+        self.color_labels: set[ColorLabel] = color_labels
 
     @property
     def xmp_path(self):
@@ -401,7 +413,7 @@ class DarktableLibrary:
         self.data_conn.close()
         self.library_conn.close()
 
-    def _row_to_photo(self, row: sqlite3.Row, tag_separator: str) -> Photo:
+    def _row_to_photo(self, row: sqlite3.Row, separator: str) -> Photo:
         return Photo(
             id=int(row['id']),
             filepath=row['filepath'],
@@ -413,14 +425,18 @@ class DarktableLibrary:
             tags={
                 Tag(int(tag_id), tag_name): int(tag_position)
                 for tag_id, tag_name, tag_position in zip(
-                    row['tag_ids'].split(tag_separator),
-                    row['tag_names'].split(tag_separator),
-                    row['tag_positions'].split(tag_separator)
+                    row['tag_ids'].split(separator),
+                    row['tag_names'].split(separator),
+                    row['tag_positions'].split(separator)
                 )
             },
             film_roll=FilmRoll(int(row['film_id']), row['film_directory']),
             position=int(row['film_position']),
             rating=row['rating'],
+            color_labels=set(
+                ColorLabel(int(color_label))
+                for color_label in row['color_label'].split(separator)
+            ),
         )
 
     def _select_photos(self, where_clause: str = "", args: tuple = (), limit: int = None) -> list[Photo]:
@@ -442,19 +458,21 @@ class DarktableLibrary:
                     images.position AS film_position,
                     GROUP_CONCAT(_tagged_images_2.tagid, ?) AS tag_ids,
                     GROUP_CONCAT(data.tags.name, ?) AS tag_names,
-                    GROUP_CONCAT(_tagged_images_2.position, ?) AS tag_positions
+                    GROUP_CONCAT(_tagged_images_2.position, ?) AS tag_positions,
+                    GROUP_CONCAT(color_labels.color, ?) as color_label
                 FROM tagged_images
                 INNER JOIN images ON tagged_images.imgid = images.id
                 INNER JOIN film_rolls ON film_rolls.id = images.film_id
                 INNER JOIN tagged_images _tagged_images_2 ON images.id = _tagged_images_2.imgid
                 INNER JOIN data.tags ON _tagged_images_2.tagid = data.tags.id
+                INNER JOIN color_labels ON images.id = color_labels.imgid
                 {where_clause}
                 GROUP BY images.id
                 {f'LIMIT {limit}' if limit is not None and limit >= 0 else ''}
-            """, (separator, separator, separator) + args)
+            """, (separator, separator, separator, separator) + args)
             result = cur.fetchall()
             return [
-                self._row_to_photo(row, tag_separator=separator)
+                self._row_to_photo(row, separator=separator)
                 for row in result
             ]
 
