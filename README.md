@@ -26,8 +26,10 @@ python database_inconsistencies.py /path/to/your/darktable/config
 
 The first argument must be the path to your Darktable config directory
 that contains `library.db` and `data.db`.
-The script opens these library's in read-only mode (`file:{db_path}?mode=ro`),
+The script opens these database files in read-only mode
+with the SQLite URL `file:{db_path}?mode=ro`,
 no data is modified.
+XMP files are also only opened in read-mode and never written to.
 
 Relevant Darktable issue:
 https://github.com/darktable-org/darktable/issues/15330
