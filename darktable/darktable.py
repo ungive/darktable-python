@@ -176,6 +176,7 @@ class FilenameFormat:
         return result
 
 
+# TODO Explain how to use this class and what arguments to pass with an example
 class Exporter:
     def __init__(self, *, cache_key, cli_bin, config_dir, filename_format,
                  out_ext, format_options, hq_resampling, width, height,
@@ -262,8 +263,10 @@ class Exporter:
         command = [
             self.cli_bin,
             photo.filepath,
+            # TODO convert any path to pure posix paths (since that's required here)
             xmp_path,
             out_path,
+            # TODO if width and height is not set, don't pass it as a parameter
             f'--width', str(self.width),
             f'--height', str(self.height),
             f'--out-ext', self.out_ext,
