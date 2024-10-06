@@ -45,8 +45,9 @@ def get_xmp_color_labels(file) -> set[darktable.ColorLabel]:
 
 
 def format_color_labels(color_labels: set[darktable.ColorLabel]):
-    return repr(list(map(lambda c: c.name.lower(),
-                         sorted(list(color_labels), key=lambda c: c.value))))
+    items = list(map(lambda c: c.name.lower(),
+                     sorted(list(color_labels), key=lambda c: c.value)))
+    return ','.join(items) if len(items) > 0 else repr([])
 
 
 def format_info(info: dict[str, any]):
