@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import datetime
 import sqlite3
+import string
 import dateutil.parser
 from pathlib import Path, PurePosixPath
 from collections import defaultdict
@@ -11,7 +12,7 @@ from xml.etree import ElementTree
 from xml.etree.ElementTree import Element
 from io import TextIOWrapper
 from os import path
-from typing import Callable
+from typing import Callable, Any
 from PIL import Image
 
 import exif
@@ -130,6 +131,49 @@ class Export:
 
     def __repr__(self):
         return f'Export({self.filepath}, {self.photo})'
+
+
+class FilenameFormat:
+    """ Implements a Darktable format string for export filenames.
+        Only supports a subset of variables as not all are used here.
+    """
+
+    class Placeholder:
+        def __init__(self, values: list[str]):
+            self.values = values
+
+        def __getattr__(self, __name: str) -> Any:
+            return FilenameFormat.Placeholder(self.values + [__name])
+
+        def __repr__(self):
+            return '.'.join(self.values).join('{}')
+
+        def __str__(self):
+            return repr(self)
+
+    class Default(dict):
+        def __missing__(self, key):
+            if not key.isupper():
+                raise KeyError(str(key))
+            return FilenameFormat.Placeholder([key])
+
+    def __init__(self, format_string):
+        """ The format_string must be a python format string,
+            where the variables from Darktable
+            are transformed to python format string placeholders, e.g.:
+            "$(FILE.NAME)" becomes "{FILE.NAME}".
+            Not that all letters must remain uppercase.
+            You can also add your own placeholders
+            which will be replaced with values that are passed to render().
+        """
+        self.format_string = format_string
+
+    def render(self, **kwargs):
+        format_dict = FilenameFormat.Default(kwargs)
+        result = string.Formatter().vformat(self.format_string, (), format_dict)
+        # result = self.format_string.format_map(format_dict)
+        result = re.sub(r'\{([A-Z\.]+)\}', r'$(\1)', result)
+        return result
 
 
 class Exporter:
