@@ -436,7 +436,7 @@ class DarktableLibrary:
             color_labels=set(
                 ColorLabel(int(color_label))
                 for color_label in row['color_label'].split(separator)
-            ),
+            ) if row['color_label'] is not None else set(),
         )
 
     def _select_photos(self, where_clause: str = "", args: tuple = (), limit: int = None) -> list[Photo]:
@@ -465,7 +465,7 @@ class DarktableLibrary:
                 INNER JOIN film_rolls ON film_rolls.id = images.film_id
                 INNER JOIN tagged_images _tagged_images_2 ON images.id = _tagged_images_2.imgid
                 INNER JOIN data.tags ON _tagged_images_2.tagid = data.tags.id
-                INNER JOIN color_labels ON images.id = color_labels.imgid
+                LEFT JOIN color_labels ON images.id = color_labels.imgid
                 {where_clause}
                 GROUP BY images.id
                 {f'LIMIT {limit}' if limit is not None and limit >= 0 else ''}
